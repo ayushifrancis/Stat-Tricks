@@ -1,1 +1,144 @@
->place your code here<
+#Read data
+w<-read.csv("Week4.csv")
+p<-read.csv("Week3.csv")
+
+#Data info
+str(w)
+head(w)
+summary(w)
+nrow(w)
+ncol(w)
+
+#Replace blank spaces with NA and check
+w<- read.csv("Week4.csv", header=T, na.strings=c("","NA"))
+View(w)
+is.na(w)
+
+#Total NA
+sum(is.na(w))
+sum(is.na(w$M))
+sum(is.na(w$T))
+sum(is.na(w$W))
+sum(is.na(w$TH))
+sum(is.na(w$F))
+
+#To check if too much data is missing or not so as too drop if more than 25-30%
+colMeans(is.na(w))
+
+#Pattern of missing data and mice package
+install.packages("mice")
+library(mice)
+md.pattern(w)
+
+install.packages("VIM")
+library(VIM)
+mice_plot <- aggr(w, col=c('green','blue'),
+                  numbers=TRUE, sortVars=TRUE,
+                  labels=names(w), cex.axis=.7,
+                  gap=3, ylab=c("Missing data","Pattern"))
+
+
+#Imputation
+y<- mice(w, m = 5, method = "pmm", maxit = 50, seed = 500)
+y
+
+#Check imputed values
+y$imp$M
+
+#Get complete data
+q<-complete(y,1)
+q
+tail(complete(y,1))
+
+#Moments
+library(moments)
+moment(q, order=1, absolute=FALSE, na.rm=TRUE)
+moment(p, order=1, absolute=FALSE, na.rm=FALSE)
+
+#Central tendency
+#mean
+print(mean(q$M+q$T+q$W+q$TH+q$F))
+print(mean(p$M+p$T+p$W+p$TH+p$F))
+
+#median
+print(median(q$M+q$T+q$W+q$TH+q$F))
+print(median(p$M+p$T+p$W+p$TH+p$F))
+
+#mode
+print(mode(q$M+q$T+q$W+q$TH+q$F))
+print(mode(p$M+p$T+p$W+p$TH+p$F))
+
+#Measure of dispersion
+#range
+range(q)
+range(p)
+
+#variance
+var(q)
+var(p)
+
+#standard deviation
+sqrt(var(q))
+sqrt(var(p))
+
+#measure of skewness and kurtosis
+print(skewness(q))
+print(kurtosis(q))
+print(skewness(p))
+print(kurtosis(p))
+
+#Histogram of week 3
+hist(p$M)
+hist(p$T)
+hist(p$W)
+hist(p$TH)
+hist(p$F)
+
+#Histogram of week 4
+hist(q$M)
+hist(q$T)
+hist(q$W)
+hist(q$TH)
+hist(q$F)
+
+
+#Predicting week 5 data
+library(caret)
+model1 <- train(M ~ .,
+               data = q,
+               method = "lm")
+model1
+e<-predict(model1,q)
+e
+model2 <- train(T ~ .,
+               data = q,
+               method = "lm")
+model2
+f<-predict(model2,q)
+f
+model3 <- train(W ~ .,
+                data = q,
+                method = "lm")
+model3
+g<-predict(model3,q)
+g
+model4 <- train(TH ~ .,
+                data = q,
+                method = "lm")
+model4
+h<-predict(model4,q)
+h
+model5 <- train(F ~ .,
+                data = q,
+                method = "lm")
+model5
+i<-predict(model5,q)
+i
+
+d<- matrix(c(e,f,g,h,i), nrow=1000, ncol=5)
+d
+v<-round(d,digits=0)
+v
+colnames(v) <- c("M1", "T1", "W1", "TH1", "F1")
+colnames(v)
+v
